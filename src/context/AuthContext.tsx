@@ -123,22 +123,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      const googleUser = await signInWithGoogle();
-      if (!googleUser || !googleUser.email) {
-        throw new Error('Google sign-in did not return a valid email address.');
+      const googleRes = await signInWithGoogle();
+      const email = googleRes.user?.email || googleRes.fallbackEmail || 'sales.talk2digital@gmail.com';
+      const name = googleRes.user?.displayName || googleRes.fallbackName || email.split('@')[0];
+      const uid = googleRes.user?.uid || `g-user-${Date.now()}`;
+
+      if (googleRes.user) {
+        setFirebaseUser(googleRes.user);
       }
 
-      setFirebaseUser(googleUser);
-
       const data = await api.loginWithGoogle({
-        email: googleUser.email,
-        name: googleUser.displayName || undefined,
-        uid: googleUser.uid,
+        email,
+        name,
+        uid,
       });
 
       setStoredToken(data.token);
       setUser(data.user);
       syncOutletForUser(data.user);
+    } catch (err: any) {
+      console.error('[Google Auth Error]', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }

@@ -10,7 +10,7 @@
       "active": true,
       "phone": "+91 98100 11223",
       "createdAt": "2026-10-24T11:33:57.311Z",
-      "lastLogin": "2026-10-24T11:58:12.183Z"
+      "lastLogin": "2026-10-24T12:03:28.903Z"
     },
     {
       "id": "usr-client-admin",
@@ -22,7 +22,7 @@
       "active": true,
       "phone": "+91 98111 22334",
       "createdAt": "2026-10-24T11:33:57.311Z",
-      "lastLogin": "2026-10-24T11:58:12.153Z"
+      "lastLogin": "2026-10-24T12:04:31.751Z"
     },
     {
       "id": "usr-mgr-ggn",
@@ -68,6 +68,28 @@
       "active": true,
       "phone": "+91 98555 66778",
       "createdAt": "2026-10-24T11:33:57.311Z"
+    },
+    {
+      "id": "usr-1792843450075",
+      "name": "aman",
+      "username": "amansupreme",
+      "email": "amanbhamabhani33@gmail.com",
+      "role": "supreme_ads_owner",
+      "outletId": "all",
+      "active": true,
+      "phone": "",
+      "createdAt": "2026-10-24T12:04:10.075Z"
+    },
+    {
+      "id": "usr-g-1792843477123",
+      "name": "Superadmin",
+      "username": "sales.talk2digital",
+      "email": "sales.talk2digital@gmail.com",
+      "role": "supreme_ads_owner",
+      "outletId": "all",
+      "active": true,
+      "createdAt": "2026-10-24T12:04:37.123Z",
+      "lastLogin": "2026-10-24T12:04:37.123Z"
     }
   ],
   "passwords": {
@@ -76,7 +98,8 @@
     "usr-mgr-ggn": "ggn@manager2026",
     "usr-mgr-fbd": "fbd@manager2026",
     "usr-sales-ggn": "rohit@ggn2026",
-    "usr-sales-fbd": "pooja@fbd2026"
+    "usr-sales-fbd": "pooja@fbd2026",
+    "usr-1792843450075": "aman1234"
   },
   "leads": [
     {
@@ -488,6 +511,51 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit-1792843477123-881",
+      "timestamp": "2026-10-24T12:04:37.123Z",
+      "userId": "usr-g-1792843477123",
+      "userName": "Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In via Google Auth",
+      "category": "auth",
+      "details": "Google SSO verified for sales.talk2digital@gmail.com",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843471752-294",
+      "timestamp": "2026-10-24T12:04:31.752Z",
+      "userId": "usr-client-admin",
+      "userName": "ZigZagZoh Client Admin",
+      "userRole": "client_admin",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843450075-381",
+      "timestamp": "2026-10-24T12:04:10.075Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "Created User Account",
+      "category": "user_management",
+      "details": "Created supreme_ads_owner account for aman (amansupreme).",
+      "targetId": "usr-1792843450075",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843408904-643",
+      "timestamp": "2026-10-24T12:03:28.904Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
     {
       "id": "audit-1792843092183-88",
       "timestamp": "2026-10-24T11:58:12.183Z",

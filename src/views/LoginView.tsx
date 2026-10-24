@@ -1,22 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
-import { api } from '../services/api.ts';
-import { Eye, EyeOff, Lock, User, ArrowRight, Store } from 'lucide-react';
-import type { User as UserType } from '../types/index.ts';
+import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { login, loginWithGoogleAuth, quickLoginAsDemo } = useAuth();
+  const { login, loginWithGoogleAuth } = useAuth();
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [demoAccounts, setDemoAccounts] = useState<Array<UserType & { samplePassword: string }>>([]);
-
-  useEffect(() => {
-    api.getDemoAccounts().then((res) => setDemoAccounts(res.accounts)).catch(() => {});
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +42,7 @@ export const LoginView: React.FC = () => {
     <div className="min-h-screen bg-[#FFF9F6] flex flex-col justify-between p-4 sm:p-6 font-sans">
       <div className="flex-1 flex items-center justify-center py-8">
         <div className="w-full max-w-md space-y-6">
-          {/* Authentic Brand Header - NO AI LOGO */}
+          {/* Authentic Brand Header */}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#F4B6A0] to-[#FCE4D9] shadow-sm border border-[#F4B6A0]/50 mb-1">
               <span className="text-xl font-black text-[#302A28] tracking-tighter">ZZ</span>
@@ -75,7 +68,7 @@ export const LoginView: React.FC = () => {
           {/* Login Card */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#F0E4DF] shadow-xs space-y-5">
             {errorMessage && (
-              <div className="p-3 bg-[#FEECEB] border border-[#D9534F]/30 rounded-xl text-[#D9534F] text-xs">
+              <div className="p-3 bg-[#FEECEB] border border-[#D9534F]/30 rounded-xl text-[#D9534F] text-xs leading-relaxed">
                 {errorMessage}
               </div>
             )}
@@ -119,20 +112,15 @@ export const LoginView: React.FC = () => {
             {/* Standard Username/Email & Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-1">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-[#302A28]">
-                    Username or Email
-                  </label>
-                  <span className="text-[10px] text-[#7B706B] font-mono">
-                    ID: admin
-                  </span>
-                </div>
+                <label className="block font-bold text-[#302A28] mb-1.5">
+                  Username or Email
+                </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-[#7B706B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="admin or admin@zigzagzoh.com"
+                    placeholder="Enter your username or email"
                     value={usernameOrEmail}
                     onChange={(e) => setUsernameOrEmail(e.target.value)}
                     className="w-full pl-10 pr-3 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all font-medium"
@@ -141,18 +129,13 @@ export const LoginView: React.FC = () => {
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-[#302A28]">Password</label>
-                  <span className="text-[10px] text-[#7B706B] font-mono">
-                    Pass: admin or zigzag@admin2026
-                  </span>
-                </div>
+                <label className="block font-bold text-[#302A28] mb-1.5">Password</label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#7B706B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Enter password (e.g. admin)"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all font-medium"
@@ -169,36 +152,13 @@ export const LoginView: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
                 className="w-full py-2.5 bg-[#F4B6A0] hover:bg-[#EFA48A] text-[#302A28] font-black text-xs rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>{isLoading ? 'Signing In...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-
-            {/* Simple One-Click Demo Switcher */}
-            <div className="pt-3 border-t border-[#F0E4DF] space-y-2">
-              <span className="text-[10px] font-bold text-[#7B706B] uppercase tracking-wider block text-center">
-                Quick Evaluator Access (Click Any Role)
-              </span>
-
-              <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                {demoAccounts.map((acc) => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    onClick={() => quickLoginAsDemo(acc)}
-                    className="p-1.5 px-2 rounded-lg bg-[#FFF9F6] hover:bg-[#FCE4D9] border border-[#F0E4DF] text-left transition-colors cursor-pointer text-xs"
-                  >
-                    <span className="font-bold text-[11px] text-[#302A28] block truncate">{acc.name.split(' ')[0]}</span>
-                    <span className="text-[9px] text-[#7B706B] block capitalize">
-                      {acc.role.replace(/_/g, ' ')}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
