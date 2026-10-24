@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #FFF9F6;
+    --peach-soft: #FCE4D9;
+    --peach-primary: #F4B6A0;
+    --peach-hover: #EFA48A;
+    --text-primary: #302A28;
+    --text-secondary: #7B706B;
+    --border-color: #F0E4DF;
+    --status-success: #2E8B65;
+    --status-warning: #E4A23B;
+    --status-error: #D9534F;
+    --status-info: #5587C7;
+    --status-meeting: #8C78B8;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #302A28;
+    background-color: #FFF9F6;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbars with peach accent */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF9F6;
+}
+::-webkit-scrollbar-thumb {
+  background: #F0E4DF;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F4B6A0;
+}

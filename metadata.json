@@ -1,0 +1,6 @@
+{
+  "name": "ZigZagZoh CRM",
+  "description": "Production-ready CRM and sales management portal for ZigZagZoh (Gurgaon & Faridabad outlets) powered by Supreme Ads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

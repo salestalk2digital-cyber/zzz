@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and outlet authorization",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["supreme_ads_owner", "client_admin", "manager", "gurgaon_team", "faridabad_team"] },
+        "outletId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role", "active"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Customer enquiry for play area or party slots",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "whatsAppNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "outletId": { "type": "string", "enum": ["gurgaon", "faridabad"] },
+        "assignedSalespersonId": { "type": "string" },
+        "assignedSalespersonName": { "type": "string" },
+        "leadSource": { "type": "string" },
+        "requirement": { "type": "string" },
+        "status": { "type": "string" },
+        "qualityScore": { "type": "number" },
+        "qualityBand": { "type": "string" },
+        "budget": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "customerName", "mobileNumber", "outletId", "requirement", "status"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Exclusive slot booking or customer interest registration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "leadId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "outletId": { "type": "string" },
+        "date": { "type": "string" },
+        "slotDefinitionId": { "type": "string" },
+        "slotName": { "type": "string" },
+        "status": { "type": "string", "enum": ["interested", "booking_requested", "confirmed", "cancelled"] },
+        "confirmedSaleAmount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "leadId", "customerName", "outletId", "date", "slotDefinitionId", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User account documents indexed by UID"
+    },
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Active and historical leads for both outlets"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Slot reservations and inquiries"
+    }
+  }
+}
