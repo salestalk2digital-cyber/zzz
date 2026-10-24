@@ -10,7 +10,7 @@
       "active": true,
       "phone": "+91 98100 11223",
       "createdAt": "2026-10-24T11:33:57.311Z",
-      "lastLogin": "2026-10-24T11:34:07.076Z"
+      "lastLogin": "2026-10-24T11:58:12.183Z"
     },
     {
       "id": "usr-client-admin",
@@ -21,7 +21,8 @@
       "outletId": "all",
       "active": true,
       "phone": "+91 98111 22334",
-      "createdAt": "2026-10-24T11:33:57.311Z"
+      "createdAt": "2026-10-24T11:33:57.311Z",
+      "lastLogin": "2026-10-24T11:58:12.153Z"
     },
     {
       "id": "usr-mgr-ggn",
@@ -32,7 +33,8 @@
       "outletId": "gurgaon",
       "active": true,
       "phone": "+91 98222 33445",
-      "createdAt": "2026-10-24T11:33:57.311Z"
+      "createdAt": "2026-10-24T11:33:57.311Z",
+      "lastLogin": "2026-10-24T11:58:12.200Z"
     },
     {
       "id": "usr-mgr-fbd",
@@ -181,7 +183,7 @@
       "assignedSalespersonId": "usr-sales-fbd",
       "assignedSalespersonName": "Pooja Rawat (Faridabad Team)",
       "createdAt": "2026-10-23T23:33:57.311Z",
-      "updatedAt": "2026-10-24T08:33:57.311Z",
+      "updatedAt": "2026-10-24T11:56:58.522Z",
       "leadSource": "Website",
       "requirement": "School Playgroup field trip package for 35 children",
       "preferredDate": "2026-11-25",
@@ -250,6 +252,18 @@
       "timestamp": "2026-10-23T19:33:57.312Z",
       "activityType": "Negotiation",
       "outcome": "Discussion Ongoing"
+    },
+    {
+      "id": "rem-1792843018522-752",
+      "leadId": "ZZ-FAR-2002",
+      "slotIndex": 1,
+      "remarkText": "m",
+      "authorId": "usr-owner-1",
+      "authorName": "Supreme Ads Superadmin",
+      "authorRole": "supreme_ads_owner",
+      "timestamp": "2026-10-24T11:56:58.522Z",
+      "activityType": "Negotiation",
+      "outcome": "Converted / Booked"
     }
   ],
   "followUpTasks": [
@@ -474,6 +488,106 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit-1792843092183-88",
+      "timestamp": "2026-10-24T11:58:12.183Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843092153-687",
+      "timestamp": "2026-10-24T11:58:12.153Z",
+      "userId": "usr-client-admin",
+      "userName": "ZigZagZoh Client Admin",
+      "userRole": "client_admin",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843029872-310",
+      "timestamp": "2026-10-24T11:57:09.872Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843023624-750",
+      "timestamp": "2026-10-24T11:57:03.624Z",
+      "userId": "usr-client-admin",
+      "userName": "ZigZagZoh Client Admin",
+      "userRole": "client_admin",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792843018522-579",
+      "timestamp": "2026-10-24T11:56:58.522Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "Added Lead Remark",
+      "category": "lead",
+      "details": "Added slot #1 remark (Negotiation): m...",
+      "targetId": "ZZ-FAR-2002",
+      "outletId": "faridabad"
+    },
+    {
+      "id": "audit-1792842958819-44",
+      "timestamp": "2026-10-24T11:55:58.819Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "Updated System Settings",
+      "category": "settings",
+      "details": "Updated agency and WhatsApp configuration.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792842929879-343",
+      "timestamp": "2026-10-24T11:55:29.879Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792842929159-833",
+      "timestamp": "2026-10-24T11:55:29.159Z",
+      "userId": "usr-owner-1",
+      "userName": "Supreme Ads Superadmin",
+      "userRole": "supreme_ads_owner",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
+    {
+      "id": "audit-1792842925133-720",
+      "timestamp": "2026-10-24T11:55:25.133Z",
+      "userId": "usr-client-admin",
+      "userName": "ZigZagZoh Client Admin",
+      "userRole": "client_admin",
+      "action": "User Logged In",
+      "category": "auth",
+      "details": "User logged in from web client.",
+      "outletId": "all"
+    },
     {
       "id": "audit-1",
       "timestamp": "2026-10-24T11:33:57.312Z",

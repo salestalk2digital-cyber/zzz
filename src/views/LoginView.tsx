@@ -119,33 +119,43 @@ export const LoginView: React.FC = () => {
             {/* Standard Username/Email & Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-1">
               <div>
-                <label className="block font-bold text-[#302A28] mb-1.5">
-                  Username or Email
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-bold text-[#302A28]">
+                    Username or Email
+                  </label>
+                  <span className="text-[10px] text-[#7B706B] font-mono">
+                    ID: admin
+                  </span>
+                </div>
                 <div className="relative">
                   <User className="w-4 h-4 text-[#7B706B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="e.g. supreme_owner or admin@zigzagzoh.com"
+                    placeholder="admin or admin@zigzagzoh.com"
                     value={usernameOrEmail}
                     onChange={(e) => setUsernameOrEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-[#302A28] mb-1.5">Password</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-bold text-[#302A28]">Password</label>
+                  <span className="text-[10px] text-[#7B706B] font-mono">
+                    Pass: admin or zigzag@admin2026
+                  </span>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#7B706B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Enter account password"
+                    placeholder="Enter password (e.g. admin)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 bg-[#FFF9F6] border border-[#F0E4DF] rounded-xl text-xs text-[#302A28] focus:outline-hidden focus:border-[#F4B6A0] focus:bg-white transition-all font-medium"
                   />
                   <button
                     type="button"
@@ -162,7 +172,7 @@ export const LoginView: React.FC = () => {
                 disabled={isLoading}
                 className="w-full py-2.5 bg-[#F4B6A0] hover:bg-[#EFA48A] text-[#302A28] font-black text-xs rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isLoading ? 'Verifying...' : 'Sign In'}</span>
+                <span>{isLoading ? 'Signing In...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

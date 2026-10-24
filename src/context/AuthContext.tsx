@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User, OutletId } from '../types/index.ts';
 import { api, setStoredToken, clearStoredToken, getStoredToken } from '../services/api.ts';
-import { signInWithGoogle, signOutFirebase } from '../services/firebase.ts';
+import { auth, signInWithGoogle, signOutFirebase } from '../services/firebase.ts';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 
 interface AuthContextType {
   user: User | null;
+  firebaseUser: FirebaseUser | null;
   isLoading: boolean;
   activeOutlet: OutletId | 'all';
   setActiveOutlet: (outlet: OutletId | 'all') => void;
@@ -19,40 +21,75 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeOutlet, setActiveOutletState] = useState<OutletId | 'all'>('all');
 
-  // Verify stored session on load
+  // Determine initial active outlet based on user role
+  const syncOutletForUser = (currentUser: User) => {
+    if (currentUser.role === 'gurgaon_team') {
+      setActiveOutletState('gurgaon');
+    } else if (currentUser.role === 'faridabad_team') {
+      setActiveOutletState('faridabad');
+    } else if (currentUser.role === 'manager' && currentUser.outletId && currentUser.outletId !== 'all') {
+      setActiveOutletState(currentUser.outletId);
+    } else {
+      setActiveOutletState('all');
+    }
+  };
+
+  // 1. Initial verify of stored session token
   useEffect(() => {
+    let isMounted = true;
+
     async function initAuth() {
       const token = getStoredToken();
       if (!token) {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
         return;
       }
 
       try {
         const { user } = await api.getCurrentUser();
-        setUser(user);
-        // Default active outlet based on user role
-        if (user.role === 'gurgaon_team') {
-          setActiveOutletState('gurgaon');
-        } else if (user.role === 'faridabad_team') {
-          setActiveOutletState('faridabad');
-        } else if (user.role === 'manager' && user.outletId && user.outletId !== 'all') {
-          setActiveOutletState(user.outletId);
-        } else {
-          setActiveOutletState('all');
+        if (isMounted) {
+          setUser(user);
+          syncOutletForUser(user);
         }
       } catch {
         clearStoredToken();
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     }
 
     initAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Listen to Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser && fbUser.email && !getStoredToken()) {
+        try {
+          const data = await api.loginWithGoogle({
+            email: fbUser.email,
+            name: fbUser.displayName || undefined,
+            uid: fbUser.uid,
+          });
+          setStoredToken(data.token);
+          setUser(data.user);
+          syncOutletForUser(data.user);
+        } catch (err) {
+          console.error('[Firebase Auth] Failed to synchronize backend session:', err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const canChangeOutlet =
@@ -72,19 +109,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      const data = await api.login(usernameOrEmail, password);
+      const cleanId = usernameOrEmail.trim();
+      const cleanPass = password.trim();
+      const data = await api.login(cleanId, cleanPass);
       setStoredToken(data.token);
       setUser(data.user);
-
-      if (data.user.role === 'gurgaon_team') {
-        setActiveOutletState('gurgaon');
-      } else if (data.user.role === 'faridabad_team') {
-        setActiveOutletState('faridabad');
-      } else if (data.user.role === 'manager' && data.user.outletId && data.user.outletId !== 'all') {
-        setActiveOutletState(data.user.outletId);
-      } else {
-        setActiveOutletState('all');
-      }
+      syncOutletForUser(data.user);
     } finally {
       setIsLoading(false);
     }
@@ -95,8 +125,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const googleUser = await signInWithGoogle();
       if (!googleUser || !googleUser.email) {
-        throw new Error('Google sign-in did not return a valid email address');
+        throw new Error('Google sign-in did not return a valid email address.');
       }
+
+      setFirebaseUser(googleUser);
 
       const data = await api.loginWithGoogle({
         email: googleUser.email,
@@ -106,16 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setStoredToken(data.token);
       setUser(data.user);
-
-      if (data.user.role === 'gurgaon_team') {
-        setActiveOutletState('gurgaon');
-      } else if (data.user.role === 'faridabad_team') {
-        setActiveOutletState('faridabad');
-      } else if (data.user.role === 'manager' && data.user.outletId && data.user.outletId !== 'all') {
-        setActiveOutletState(data.user.outletId);
-      } else {
-        setActiveOutletState('all');
-      }
+      syncOutletForUser(data.user);
     } finally {
       setIsLoading(false);
     }
@@ -126,14 +149,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    setIsLoading(true);
     try {
-      await api.logout();
+      await api.logout().catch(() => {});
       await signOutFirebase().catch(() => {});
-    } catch {
-      // ignore
     } finally {
       clearStoredToken();
       setUser(null);
+      setFirebaseUser(null);
+      setIsLoading(false);
     }
   };
 
@@ -141,6 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        firebaseUser,
         isLoading,
         activeOutlet,
         setActiveOutlet,
