@@ -2,7 +2,7 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile with role and outlet authorization",
+      "description": "User profile with role, outlet authorization, and unique credentials",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -13,6 +13,7 @@
         "outletId": { "type": "string" },
         "active": { "type": "boolean" },
         "phone": { "type": "string" },
+        "assignedPassword": { "type": "string" },
         "createdAt": { "type": "string" }
       },
       "required": ["id", "name", "email", "role", "active"]
@@ -36,10 +37,57 @@
         "qualityScore": { "type": "number" },
         "qualityBand": { "type": "string" },
         "budget": { "type": "number" },
+        "childAge": { "type": "number" },
+        "expectedPax": { "type": "number" },
+        "targetEventDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "nextFollowUpDate": { "type": "string" },
+        "nextFollowUpTime": { "type": "string" },
+        "whatsAppActionMissing": { "type": "boolean" },
         "createdAt": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
       "required": ["id", "customerName", "mobileNumber", "outletId", "requirement", "status"]
+    },
+    "Remark": {
+      "title": "Remark",
+      "description": "Timestamped note, call summary, or customer interaction update",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "leadId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "text": { "type": "string" },
+        "outcome": { "type": "string" },
+        "nextFollowUpDate": { "type": "string" },
+        "nextFollowUpTime": { "type": "string" },
+        "stageChange": { "type": "string" }
+      },
+      "required": ["id", "leadId", "authorName", "timestamp", "text"]
+    },
+    "FollowUpTask": {
+      "title": "FollowUpTask",
+      "description": "Scheduled outreach session or task for lead pipeline",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "leadId": { "type": "string" },
+        "leadName": { "type": "string" },
+        "leadPhone": { "type": "string" },
+        "outletId": { "type": "string" },
+        "assignedToId": { "type": "string" },
+        "assignedToName": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "dueTime": { "type": "string" },
+        "session": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "missed", "rescheduled"] },
+        "escalatedToManager": { "type": "boolean" },
+        "completedAt": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "leadId", "leadName", "outletId", "dueDate", "status"]
     },
     "Booking": {
       "title": "Booking",
@@ -58,20 +106,116 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "leadId", "customerName", "outletId", "date", "slotDefinitionId", "status"]
+    },
+    "Proposal": {
+      "title": "Proposal",
+      "description": "Party package proposal shared with lead",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "leadId": { "type": "string" },
+        "leadName": { "type": "string" },
+        "outletId": { "type": "string" },
+        "packageName": { "type": "string" },
+        "amount": { "type": "number" },
+        "discount": { "type": "number" },
+        "status": { "type": "string" },
+        "validUntil": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "leadId", "leadName", "outletId", "packageName", "amount", "status"]
+    },
+    "Meeting": {
+      "title": "Meeting",
+      "description": "Outlet walk-through or scheduled tasting meeting",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "leadId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "outletId": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string" },
+        "agenda": { "type": "string" },
+        "salespersonName": { "type": "string" }
+      },
+      "required": ["id", "leadId", "customerName", "outletId", "date", "time", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Real-time alerts, escalation notices, and updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": { "type": "string" },
+        "leadId": { "type": "string" },
+        "outletId": { "type": "string" },
+        "assignedUserId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "read": { "type": "boolean" },
+        "resolved": { "type": "boolean" }
+      },
+      "required": ["id", "type", "title", "message", "severity", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security and activity audit entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userRole": { "type": "string" },
+        "action": { "type": "string" },
+        "category": { "type": "string" },
+        "details": { "type": "string" },
+        "targetId": { "type": "string" },
+        "outletId": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userName", "action", "category", "details"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "User account documents indexed by UID"
+      "description": "User account documents indexed by user ID"
     },
     "/leads/{leadId}": {
       "schema": "Lead",
       "description": "Active and historical leads for both outlets"
     },
+    "/leads/{leadId}/remarks/{remarkId}": {
+      "schema": "Remark",
+      "description": "Chronological remarks and call logs for each lead"
+    },
+    "/followUpTasks/{taskId}": {
+      "schema": "FollowUpTask",
+      "description": "Pending and completed follow-up pipeline tasks"
+    },
     "/bookings/{bookingId}": {
       "schema": "Booking",
-      "description": "Slot reservations and inquiries"
+      "description": "Slot reservations, booking requests, and confirmed bookings"
+    },
+    "/proposals/{proposalId}": {
+      "schema": "Proposal",
+      "description": "Commercial proposals shared with leads"
+    },
+    "/meetings/{meetingId}": {
+      "schema": "Meeting",
+      "description": "Scheduled customer visits and taste sessions"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Manager escalations, reminders, and alerts"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Compliance, login, and mutation audit logs"
     }
   }
 }
