@@ -194,7 +194,7 @@ const MainApp: React.FC = () => {
 
           {activeTab === 'users' && <UsersView />}
 
-          {activeTab === 'settings' && <SettingsView />}
+          {activeTab === 'settings' && <SettingsView onNavigateToTab={setActiveTab} />}
 
           {activeTab === 'audit' && <AuditLogsView />}
         </main>

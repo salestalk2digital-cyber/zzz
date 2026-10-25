@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api.ts';
-import { Settings, Shield, MessageSquare, Clock, Save } from 'lucide-react';
+import { Settings, Shield, MessageSquare, Clock, Save, UserPlus, KeyRound, ChevronRight } from 'lucide-react';
 
-export const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  onNavigateToTab?: (tab: any) => void;
+}
+
+export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateToTab }) => {
   const [settings, setSettings] = useState<any>({
     agencyName: 'Supreme Ads',
     brandName: 'ZigZagZoh',
@@ -45,12 +49,49 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-xl font-black text-[#302A28]">System & Agency Settings</h1>
-        <p className="text-xs text-[#7B706B] mt-0.5">
-          Owner Console • Supreme Ads integration parameters & operational session schedules
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-black text-[#302A28]">System & Agency Settings</h1>
+          <p className="text-xs text-[#7B706B] mt-0.5">
+            Admin Console • Operational schedules, agency parameters, and user credentials
+          </p>
+        </div>
+
+        {onNavigateToTab && (
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('users')}
+            className="flex items-center gap-2 px-3.5 py-2 bg-[#FCE4D9] hover:bg-[#F4B6A0] text-[#302A28] text-xs font-bold rounded-xl transition-all border border-[#F4B6A0]/40 cursor-pointer"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Manage Users & Passwords</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
+
+      {/* User Management Quick Banner */}
+      {onNavigateToTab && (
+        <div
+          onClick={() => onNavigateToTab('users')}
+          className="p-4 bg-gradient-to-r from-white to-[#FFF9F6] border border-[#F0E4DF] hover:border-[#F4B6A0] rounded-2xl shadow-xs flex items-center justify-between cursor-pointer transition-all hover:shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FCE4D9] flex items-center justify-center text-[#302A28]">
+              <KeyRound className="w-5 h-5 text-[#302A28]" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xs text-[#302A28]">Team Accounts & Passwords</h3>
+              <p className="text-[11px] text-[#7B706B]">
+                Create team members with unique usernames, assign custom passwords, or copy credentials.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-[#302A28] flex items-center gap-1">
+            Open Users <ChevronRight className="w-4 h-4 text-[#F4B6A0]" />
+          </span>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-6 text-xs">
         {/* WhatsApp Cloud API Credentials */}

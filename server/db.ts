@@ -20,8 +20,16 @@ import type {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.resolve(__dirname, '../data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+const DEFAULT_DATA_DIR = path.resolve(__dirname, '../data');
+const DEFAULT_DB_FILE = path.join(DEFAULT_DATA_DIR, 'db.json');
+
+// Check if running in Vercel or AWS Lambda environment where filesystem is read-only
+function getDatabaseFilePath(): string {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join('/tmp', 'zigzagzoh_db.json');
+  }
+  return DEFAULT_DB_FILE;
+}
 
 export interface DatabaseSchema {
   users: User[];
@@ -563,36 +571,55 @@ function getInitialDatabase(): DatabaseSchema {
 export function loadDatabase(): DatabaseSchema {
   if (dbCache) return dbCache;
 
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+  const targetFile = getDatabaseFilePath();
 
-  if (fs.existsSync(DB_FILE)) {
+  // 1. Try reading existing database from targetFile (/tmp or data/db.json)
+  if (fs.existsSync(targetFile)) {
     try {
-      const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      const raw = fs.readFileSync(targetFile, 'utf-8');
       dbCache = JSON.parse(raw);
       return dbCache!;
     } catch (err) {
-      console.error('Failed to parse db.json, generating defaults:', err);
+      console.warn('Failed to parse active database file, checking default:', err);
     }
   }
 
+  // 2. If target is in /tmp and doesn't exist yet, try copying from bundled DEFAULT_DB_FILE
+  if (targetFile !== DEFAULT_DB_FILE && fs.existsSync(DEFAULT_DB_FILE)) {
+    try {
+      const raw = fs.readFileSync(DEFAULT_DB_FILE, 'utf-8');
+      dbCache = JSON.parse(raw);
+      saveDatabase(dbCache!);
+      return dbCache!;
+    } catch {}
+  }
+
+  // 3. Fallback to fresh initial database
   const initial = getInitialDatabase();
-  saveDatabase(initial);
   dbCache = initial;
+  saveDatabase(initial);
   return dbCache;
 }
 
 export function saveDatabase(data: DatabaseSchema): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
   dbCache = data;
 
-  // Safe atomic write
-  const tempPath = `${DB_FILE}.tmp.${Date.now()}`;
-  fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf-8');
-  fs.renameSync(tempPath, DB_FILE);
+  try {
+    const targetFile = getDatabaseFilePath();
+    const targetDir = path.dirname(targetFile);
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    // Safe atomic write
+    const tempPath = `${targetFile}.tmp.${Date.now()}`;
+    fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempPath, targetFile);
+  } catch (err) {
+    // Graceful in-memory fallback for read-only environments (e.g. AWS Lambda / Vercel without /tmp access)
+    console.warn('[DB] Could not persist to disk, keeping changes in memory:', err);
+  }
 }
 
 // Concurrency-safe atomic transaction runner

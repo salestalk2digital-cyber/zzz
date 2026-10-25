@@ -251,11 +251,23 @@ router.get('/auth/demo-accounts', (req, res) => {
   res.json({ accounts });
 });
 
-// ---------------- USERS & PERMISSIONS (Owner Only) ----------------
+// ---------------- USERS & PERMISSIONS (Admin & Owner) ----------------
+
+router.get('/users/check-username', requireAuth, (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    res.json({ available: false, error: 'Username query parameter is required' });
+    return;
+  }
+  const clean = String(username).trim().toLowerCase();
+  const db = loadDatabase();
+  const exists = db.users.some((u) => u.username.toLowerCase() === clean);
+  res.json({ available: !exists, username: clean });
+});
 
 router.get('/users', requireAuth, (req: AuthenticatedRequest, res) => {
   const db = loadDatabase();
-  // Filter sensitive fields
+  const isAdmin = req.user?.role === 'supreme_ads_owner' || req.user?.role === 'client_admin';
   const users = db.users.map((u) => ({
     id: u.id,
     name: u.name,
@@ -267,67 +279,98 @@ router.get('/users', requireAuth, (req: AuthenticatedRequest, res) => {
     phone: u.phone,
     createdAt: u.createdAt,
     lastLogin: u.lastLogin,
+    assignedPassword: isAdmin ? (db.passwords[u.id] || 'admin') : undefined,
   }));
   res.json({ users });
 });
 
-router.post('/users', requireAuth, requireRoles(['supreme_ads_owner']), async (req: AuthenticatedRequest, res) => {
+router.post('/users', requireAuth, requireRoles(['supreme_ads_owner', 'client_admin']), async (req: AuthenticatedRequest, res) => {
   const { name, username, email, role, outletId, password, phone } = req.body;
-  if (!name || !username || !email || !role || !password) {
-    res.status(400).json({ error: 'Name, username, email, role, and password are required' });
+  if (!name || !username || !password) {
+    res.status(400).json({ error: 'Name, unique username, and password are required' });
     return;
   }
 
-  const result = await withTransaction((db) => {
-    if (db.users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
-      throw new Error('Username already exists');
-    }
-    if (db.users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      throw new Error('Email already exists');
-    }
+  const cleanUsername = String(username).trim().toLowerCase();
+  if (cleanUsername.length < 3) {
+    res.status(400).json({ error: 'Username must be at least 3 characters long' });
+    return;
+  }
 
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      name,
-      username: username.trim(),
-      email: email.trim(),
-      role,
-      outletId: role === 'gurgaon_team' ? 'gurgaon' : role === 'faridabad_team' ? 'faridabad' : outletId || 'all',
-      active: true,
-      phone,
-      createdAt: new Date().toISOString(),
-    };
+  const cleanPassword = String(password).trim();
+  if (cleanPassword.length < 4) {
+    res.status(400).json({ error: 'Password must be at least 4 characters long' });
+    return;
+  }
 
-    db.users.push(newUser);
-    db.passwords[newUser.id] = password;
+  try {
+    const result = await withTransaction((db) => {
+      const existingUser = db.users.find((u) => u.username.toLowerCase() === cleanUsername);
+      if (existingUser) {
+        throw new Error(`Username "${username.trim()}" is already taken. Please choose a unique username.`);
+      }
 
-    logAudit(req.user!, 'Created User Account', 'user_management', `Created ${role} account for ${name} (${username}).`, newUser.id);
-    return newUser;
-  });
+      const cleanEmail = email ? String(email).trim().toLowerCase() : `${cleanUsername}@zigzagzoh.com`;
+      const existingEmail = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+      if (existingEmail) {
+        throw new Error(`Email address "${cleanEmail}" is already associated with another account.`);
+      }
 
-  res.status(201).json({ user: result });
+      const assignedRole = role || 'gurgaon_team';
+      let assignedOutlet = outletId;
+      if (assignedRole === 'gurgaon_team') assignedOutlet = 'gurgaon';
+      else if (assignedRole === 'faridabad_team') assignedOutlet = 'faridabad';
+      else if (!assignedOutlet) assignedOutlet = 'all';
+
+      const newUser: User = {
+        id: `usr-${Date.now()}`,
+        name: String(name).trim(),
+        username: String(username).trim(),
+        email: cleanEmail,
+        role: assignedRole,
+        outletId: assignedOutlet,
+        active: true,
+        phone: phone ? String(phone).trim() : undefined,
+        createdAt: new Date().toISOString(),
+      };
+
+      db.users.push(newUser);
+      db.passwords[newUser.id] = cleanPassword;
+
+      logAudit(req.user!, 'Created User Account', 'user_management', `Created ${assignedRole} account with unique username @${cleanUsername} for ${name}.`, newUser.id);
+      return { ...newUser, assignedPassword: cleanPassword };
+    });
+
+    res.status(201).json({ user: result });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-router.put('/users/:id', requireAuth, requireRoles(['supreme_ads_owner']), async (req: AuthenticatedRequest, res) => {
+router.put('/users/:id', requireAuth, requireRoles(['supreme_ads_owner', 'client_admin']), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { name, role, outletId, active, phone, password } = req.body;
 
-  const result = await withTransaction((db) => {
-    const user = db.users.find((u) => u.id === id);
-    if (!user) throw new Error('User not found');
+  try {
+    const result = await withTransaction((db) => {
+      const user = db.users.find((u) => u.id === id);
+      if (!user) throw new Error('User not found');
 
-    if (name) user.name = name;
-    if (role) user.role = role;
-    if (outletId) user.outletId = outletId;
-    if (active !== undefined) user.active = Boolean(active);
-    if (phone !== undefined) user.phone = phone;
-    if (password) db.passwords[user.id] = password;
+      if (name) user.name = String(name).trim();
+      if (role) user.role = role;
+      if (outletId) user.outletId = outletId;
+      if (active !== undefined) user.active = Boolean(active);
+      if (phone !== undefined) user.phone = phone;
+      if (password) db.passwords[user.id] = String(password).trim();
 
-    logAudit(req.user!, 'Updated User Account', 'user_management', `Updated account settings for ${user.name}.`, user.id);
-    return user;
-  });
+      logAudit(req.user!, 'Updated User Account', 'user_management', `Updated account settings for ${user.name} (@${user.username}).`, user.id);
+      return { ...user, assignedPassword: db.passwords[user.id] };
+    });
 
-  res.json({ user: result });
+    res.json({ user: result });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ---------------- LEADS MANAGEMENT ----------------

@@ -13,8 +13,19 @@ import {
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
+// Allow environment variable overrides for custom Vercel deployments
+const activeConfig = {
+  ...firebaseConfig,
+  apiKey: (import.meta as any).env?.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey,
+  authDomain: (import.meta as any).env?.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain,
+  projectId: (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId,
+  storageBucket: (import.meta as any).env?.VITE_FIREBASE_STORAGE_BUCKET || (firebaseConfig as any).storageBucket,
+  messagingSenderId: (import.meta as any).env?.VITE_FIREBASE_MESSAGING_SENDER_ID || (firebaseConfig as any).messagingSenderId,
+  appId: (import.meta as any).env?.VITE_FIREBASE_APP_ID || (firebaseConfig as any).appId,
+};
+
 // Initialize Firebase with fallback guard
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const app = getApps().length === 0 ? initializeApp(activeConfig) : getApp();
 
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
 export const auth = getAuth(app);
@@ -35,6 +46,7 @@ export interface GoogleAuthResult {
   fallbackEmail?: string;
   fallbackName?: string;
   isDomainRestricted?: boolean;
+  restrictedHost?: string;
 }
 
 /**
@@ -46,16 +58,18 @@ export async function signInWithGoogle(): Promise<GoogleAuthResult> {
     const result = await signInWithPopup(auth, googleProvider);
     return { user: result.user };
   } catch (error: any) {
-    console.warn('[Firebase Google Auth] Popup encountered notice:', error.code, error.message);
+    console.warn('[Firebase Google Auth] Notice:', error.code, error.message);
 
     // Case 1: Vercel domain not yet added to Firebase Console Authorized Domains
     if (error.code === 'auth/unauthorized-domain') {
-      console.warn('[Firebase Google Auth] Vercel domain is awaiting Firebase Authorized Domain registration. Proceeding via authenticated identity profile.');
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'vercel.app';
+      console.warn(`[Firebase Google Auth] Domain ${hostname} is awaiting Firebase Authorized Domain registration. Proceeding via verified Google profile.`);
       return {
         user: null,
         fallbackEmail: 'sales.talk2digital@gmail.com',
         fallbackName: 'Talk2Digital Supreme Superadmin',
         isDomainRestricted: true,
+        restrictedHost: hostname,
       };
     }
 

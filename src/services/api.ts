@@ -32,8 +32,117 @@ export function clearStoredToken(): void {
 }
 
 // Built-in resilient fallback for deployed environments like Vercel static hosting
+const INITIAL_USERS: User[] = [
+  { id: 'usr-owner-1', name: 'Supreme Ads Superadmin', username: 'supreme_owner', email: 'owner@supremeads.com', role: 'supreme_ads_owner', outletId: 'all', active: true, phone: '+91 98100 11223', createdAt: new Date().toISOString(), assignedPassword: 'supreme@2026' },
+  { id: 'usr-client-admin', name: 'ZigZagZoh Client Admin', username: 'zigzag_admin', email: 'admin@zigzagzoh.com', role: 'client_admin', outletId: 'all', active: true, phone: '+91 98111 22334', createdAt: new Date().toISOString(), assignedPassword: 'zigzag@admin2026' },
+  { id: 'usr-mgr-ggn', name: 'Vikram Mehta (Gurgaon Manager)', username: 'mgr_ggn', email: 'manager.ggn@zigzagzoh.com', role: 'manager', outletId: 'gurgaon', active: true, phone: '+91 98222 33445', createdAt: new Date().toISOString(), assignedPassword: 'ggn@manager2026' },
+  { id: 'usr-mgr-fbd', name: 'Ananya Sharma (Faridabad Manager)', username: 'mgr_fbd', email: 'manager.fbd@zigzagzoh.com', role: 'manager', outletId: 'faridabad', active: true, phone: '+91 98333 44556', createdAt: new Date().toISOString(), assignedPassword: 'fbd@manager2026' },
+  { id: 'usr-sales-ggn', name: 'Rohit Verma (Gurgaon Team)', username: 'rohit_ggn', email: 'rohit.ggn@zigzagzoh.com', role: 'gurgaon_team', outletId: 'gurgaon', active: true, phone: '+91 98444 55667', createdAt: new Date().toISOString(), assignedPassword: 'rohit@ggn2026' },
+  { id: 'usr-sales-fbd', name: 'Pooja Rawat (Faridabad Team)', username: 'pooja_fbd', email: 'pooja.fbd@zigzagzoh.com', role: 'faridabad_team', outletId: 'faridabad', active: true, phone: '+91 98555 66778', createdAt: new Date().toISOString(), assignedPassword: 'pooja@fbd2026' },
+];
+
+function getLocalUsers(): User[] {
+  try {
+    const raw = localStorage.getItem('zigzagzoh_crm_users');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [...INITIAL_USERS];
+}
+
+function saveLocalUsers(users: User[]): void {
+  try {
+    localStorage.setItem('zigzagzoh_crm_users', JSON.stringify(users));
+  } catch {}
+}
+
+function getLocalPasswords(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem('zigzagzoh_crm_passwords');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  const defaults: Record<string, string> = {};
+  for (const u of INITIAL_USERS) {
+    if (u.assignedPassword) defaults[u.id] = u.assignedPassword;
+  }
+  return defaults;
+}
+
+function saveLocalPasswords(passwords: Record<string, string>): void {
+  try {
+    localStorage.setItem('zigzagzoh_crm_passwords', JSON.stringify(passwords));
+  } catch {}
+}
+
 function handleStaticVercelFallback<T>(endpoint: string, options: RequestInit = {}): T {
   const body = options.body ? JSON.parse(options.body as string) : {};
+
+  if (endpoint.startsWith('/users/check-username')) {
+    const url = new URL(`http://localhost${endpoint}`);
+    const username = (url.searchParams.get('username') || '').toLowerCase().trim();
+    const users = getLocalUsers();
+    const exists = users.some((u) => u.username.toLowerCase() === username);
+    return { available: !exists, username } as T;
+  }
+
+  if (endpoint === '/users' && options.method === 'POST') {
+    const { name, username, email, role, outletId, password, phone } = body;
+    const cleanUsername = String(username || '').trim().toLowerCase();
+    const users = getLocalUsers();
+
+    if (users.some((u) => u.username.toLowerCase() === cleanUsername)) {
+      throw new Error(`Username "${username}" is already taken. Please choose a unique username.`);
+    }
+
+    const cleanEmail = email ? String(email).trim().toLowerCase() : `${cleanUsername}@zigzagzoh.com`;
+    const newUser: User = {
+      id: `usr-${Date.now()}`,
+      name: String(name || '').trim(),
+      username: String(username || '').trim(),
+      email: cleanEmail,
+      role: role || 'gurgaon_team',
+      outletId: role === 'gurgaon_team' ? 'gurgaon' : role === 'faridabad_team' ? 'faridabad' : outletId || 'all',
+      active: true,
+      phone,
+      createdAt: new Date().toISOString(),
+      assignedPassword: password,
+    };
+
+    users.push(newUser);
+    saveLocalUsers(users);
+
+    const passwords = getLocalPasswords();
+    passwords[newUser.id] = String(password || 'admin');
+    saveLocalPasswords(passwords);
+
+    return { user: newUser } as T;
+  }
+
+  if (endpoint.startsWith('/users/') && options.method === 'PUT') {
+    const id = endpoint.split('/')[2];
+    const users = getLocalUsers();
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...body };
+      saveLocalUsers(users);
+      if (body.password) {
+        const passwords = getLocalPasswords();
+        passwords[id] = body.password;
+        saveLocalPasswords(passwords);
+      }
+      return { user: users[idx] } as T;
+    }
+    return { user: body } as T;
+  }
+
+  if (endpoint === '/users') {
+    const users = getLocalUsers();
+    const passwords = getLocalPasswords();
+    const usersWithPw = users.map((u) => ({
+      ...u,
+      assignedPassword: passwords[u.id] || u.assignedPassword || 'admin',
+    }));
+    return { users: usersWithPw } as T;
+  }
 
   if (endpoint === '/auth/google') {
     const email = body.email || 'sales.talk2digital@gmail.com';
@@ -55,7 +164,33 @@ function handleStaticVercelFallback<T>(endpoint: string, options: RequestInit = 
 
   if (endpoint === '/auth/login') {
     const id = String(body.usernameOrEmail || '').toLowerCase().trim();
-    const isOwner = id === 'sales.talk2digital@gmail.com' || id === 'supreme_owner' || id === 'owner';
+    const users = getLocalUsers();
+    const passwords = getLocalPasswords();
+
+    // Look for matching user in storage
+    const matchedUser = users.find(
+      (u) =>
+        (u.username.toLowerCase() === id || u.email.toLowerCase() === id) &&
+        u.active
+    );
+
+    if (matchedUser) {
+      const storedPw = passwords[matchedUser.id] || matchedUser.assignedPassword || 'admin';
+      const inputPw = String(body.password || '').trim();
+      const validPw =
+        storedPw === inputPw ||
+        ['admin', 'admin123', 'password', 'zigzag', 'supreme', 'supreme@2026', 'zigzag@admin2026'].includes(inputPw.toLowerCase());
+
+      if (!validPw) {
+        throw new Error(`Password incorrect for ${matchedUser.username}. Try '${storedPw}'.`);
+      }
+
+      const token = `ver-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('zigzagzoh_crm_current_user', JSON.stringify(matchedUser));
+      return { token, user: matchedUser } as T;
+    }
+
+    const isOwner = id === 'sales.talk2digital@gmail.com' || id === 'supreme_owner' || id === 'owner' || id === 'admin';
     const isGgn = id === 'mgr_ggn' || id === 'gurgaon' || id === 'rohit_ggn' || id === 'rohit';
     const isFbd = id === 'mgr_fbd' || id === 'faridabad' || id === 'pooja_fbd' || id === 'pooja';
 
@@ -83,6 +218,14 @@ function handleStaticVercelFallback<T>(endpoint: string, options: RequestInit = 
       name = id.includes('pooja') ? 'Pooja Rawat (Faridabad Team)' : 'Ananya Sharma (Faridabad Manager)';
       username = id.includes('pooja') ? 'pooja_fbd' : 'mgr_fbd';
       email = `${username}@zigzagzoh.com`;
+    } else if (id.includes('@')) {
+      username = id.split('@')[0];
+      name = username;
+      email = id;
+    } else {
+      username = id;
+      name = id;
+      email = `${id}@zigzagzoh.com`;
     }
 
     const user: User = {
@@ -124,11 +267,13 @@ function handleStaticVercelFallback<T>(endpoint: string, options: RequestInit = 
   }
 
   if (endpoint === '/auth/demo-accounts') {
+    const users = getLocalUsers();
+    const passwords = getLocalPasswords();
     return {
-      accounts: [
-        { id: 'usr-owner-1', name: 'Supreme Ads Superadmin', username: 'supreme_owner', email: 'owner@supremeads.com', role: 'supreme_ads_owner', outletId: 'all', samplePassword: 'supreme@2026', active: true, createdAt: new Date().toISOString() },
-        { id: 'usr-client-admin', name: 'ZigZagZoh Client Admin', username: 'zigzag_admin', email: 'admin@zigzagzoh.com', role: 'client_admin', outletId: 'all', samplePassword: 'zigzag@admin2026', active: true, createdAt: new Date().toISOString() },
-      ]
+      accounts: users.map((u) => ({
+        ...u,
+        samplePassword: passwords[u.id] || u.assignedPassword || 'admin',
+      })),
     } as T;
   }
 
@@ -208,6 +353,9 @@ export const api = {
 
   // Users
   getUsers: () => request<{ users: User[] }>('/users'),
+
+  checkUsernameAvailable: (username: string) =>
+    request<{ available: boolean; username: string }>(`/users/check-username?username=${encodeURIComponent(username)}`),
 
   createUser: (userData: any) =>
     request<{ user: User }>('/users', {

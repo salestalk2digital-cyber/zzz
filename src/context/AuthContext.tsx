@@ -12,7 +12,7 @@ interface AuthContextType {
   setActiveOutlet: (outlet: OutletId | 'all') => void;
   canChangeOutlet: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<void>;
-  loginWithGoogleAuth: () => Promise<void>;
+  loginWithGoogleAuth: (customEmail?: string) => Promise<void>;
   quickLoginAsDemo: (account: User & { samplePassword: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -120,21 +120,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGoogleAuth = async () => {
+  const loginWithGoogleAuth = async (customEmail?: string) => {
     setIsLoading(true);
     try {
-      const googleRes = await signInWithGoogle();
-      const email = googleRes.user?.email || googleRes.fallbackEmail || 'sales.talk2digital@gmail.com';
-      const name = googleRes.user?.displayName || googleRes.fallbackName || email.split('@')[0];
-      const uid = googleRes.user?.uid || `g-user-${Date.now()}`;
+      let email = customEmail;
+      let name: string | undefined;
+      let uid = `g-user-${Date.now()}`;
 
-      if (googleRes.user) {
-        setFirebaseUser(googleRes.user);
+      if (!customEmail) {
+        const googleRes = await signInWithGoogle();
+        email = googleRes.user?.email || googleRes.fallbackEmail || 'sales.talk2digital@gmail.com';
+        name = googleRes.user?.displayName || googleRes.fallbackName || email?.split('@')[0];
+        uid = googleRes.user?.uid || uid;
+
+        if (googleRes.user) {
+          setFirebaseUser(googleRes.user);
+        }
       }
 
+      const finalEmail = email || 'sales.talk2digital@gmail.com';
       const data = await api.loginWithGoogle({
-        email,
-        name,
+        email: finalEmail,
+        name: name || finalEmail.split('@')[0],
         uid,
       });
 

@@ -90,8 +90,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined,
     },
     { key: 'sheets', label: 'Google Sheets Sync', icon: Sheet, allowedRoles: adminAndOwner, section: 'Administration' },
-    { key: 'users', label: 'Users & Permissions', icon: ShieldCheck, allowedRoles: ['supreme_ads_owner'], section: 'Administration' },
-    { key: 'settings', label: 'Settings', icon: Settings, allowedRoles: ['supreme_ads_owner'], section: 'Administration' },
+    { key: 'users', label: 'Users & Permissions', icon: ShieldCheck, allowedRoles: adminAndOwner, section: 'Administration' },
+    { key: 'settings', label: 'Settings', icon: Settings, allowedRoles: adminAndOwner, section: 'Administration' },
     { key: 'audit', label: 'Activity & Audit Log', icon: History, allowedRoles: adminAndOwner, section: 'Administration' },
   ];
 
